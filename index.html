@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Convert names to binary and visualize digital signal encoding schemes like NRZ, RZ, Manchester, Bipolar AMI, and CMI on a graphing paper layout">
+    <title>Binary Pulse Encoder - Name to Signal Converter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2 12h4l3-9 4 18 3-9h6"></path>
+                    </svg>
+                </div>
+                <h1>Binary Pulse Encoder</h1>
+            </div>
+            <p class="tagline">Convert your name to binary & visualize signal encoding</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="input-card">
+                    <h2>Enter Your Name</h2>
+                    <div class="input-wrapper">
+                        <input type="text" id="nameInput" placeholder="e.g., Rhussel Jhone D. Combo" maxlength="50">
+                        <span class="char-count"><span id="charCount">0</span>/50</span>
+                    </div>
+
+                    <div class="encoding-selector">
+                        <h3>Select Encoding Type</h3>
+                        <div class="encoding-options">
+                            <label class="encoding-option">
+                                <input type="radio" name="encoding" value="nrz" checked>
+                                <span class="option-box">
+                                    <span class="option-title">NRZ-L</span>
+                                    <span class="option-desc">Non-Return to Zero Level</span>
+                                </span>
+                            </label>
+                            <label class="encoding-option">
+                                <input type="radio" name="encoding" value="rz">
+                                <span class="option-box">
+                                    <span class="option-title">RZ</span>
+                                    <span class="option-desc">Return to Zero</span>
+                                </span>
+                            </label>
+                            <label class="encoding-option">
+                                <input type="radio" name="encoding" value="manchester">
+                                <span class="option-box">
+                                    <span class="option-title">Manchester</span>
+                                    <span class="option-desc">Bi-phase encoding</span>
+                                </span>
+                            </label>
+                            <label class="encoding-option">
+                                <input type="radio" name="encoding" value="ami">
+                                <span class="option-box">
+                                    <span class="option-title">Bipolar AMI</span>
+                                    <span class="option-desc">Alternate Mark Inversion</span>
+                                </span>
+                            </label>
+                            <label class="encoding-option">
+                                <input type="radio" name="encoding" value="cmi">
+                                <span class="option-box">
+                                    <span class="option-title">CMI</span>
+                                    <span class="option-desc">Coded Mark Inversion</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button id="convertBtn" class="convert-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                        </svg>
+                        Convert to Signal
+                    </button>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection">
+                <!-- Binary Output -->
+                <div class="binary-output-card">
+                    <div class="card-header">
+                        <h2>Binary Representation</h2>
+                        <button id="copyBinaryBtn" class="copy-btn" title="Copy Binary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="binary-display" id="binaryDisplay">
+                        <p class="placeholder-text">Enter a name and click "Convert to Signal"</p>
+                    </div>
+                    <div class="char-breakdown" id="charBreakdown"></div>
+                </div>
+
+                <!-- Signal Waveform -->
+                <div class="waveform-card">
+                    <div class="card-header">
+                        <h2>Signal Waveform - <span id="encodingTitle">NRZ-L</span></h2>
+                        <div class="waveform-controls">
+                            <button id="zoomInBtn" class="zoom-btn" title="Zoom In">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35M11 8v6M8 11h6"></path>
+                                </svg>
+                            </button>
+                            <button id="zoomOutBtn" class="zoom-btn" title="Zoom Out">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35M8 11h6"></path>
+                                </svg>
+                            </button>
+                            <button id="downloadBtn" class="download-btn" title="Download Image">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
+                                </svg>
+                                Download
+                            </button>
+                        </div>
+                    </div>
+                    <div class="canvas-container">
+                        <canvas id="waveformCanvas"></canvas>
+                    </div>
+                    <div class="voltage-legend">
+                        <div class="legend-item">
+                            <span class="legend-color high"></span>
+                            <span>+V (High)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color zero"></span>
+                            <span>0V (Zero / Low for NRZ, CMI)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color low"></span>
+                            <span>-V (Low for RZ, Manchester, AMI)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drawing Guide -->
+                <div class="guide-card">
+                    <h2>📐 How to Draw on Graphing Paper</h2>
+                    <div class="guide-content" id="guideContent">
+                        <div class="guide-section">
+                            <h3>Step-by-Step Instructions:</h3>
+                            <ol id="guideSteps">
+                                <li>Draw your horizontal axis (time) along the bottom of your graphing paper</li>
+                                <li>Mark vertical gridlines - each bit takes 1 unit of width</li>
+                                <li>Label your voltage levels: +V at top, 0 in middle, -V at bottom</li>
+                                <li>Follow the waveform pattern shown above</li>
+                            </ol>
+                        </div>
+                        <div class="guide-section">
+                            <h3>Drawing Rules for <span id="encodingRuleName">NRZ-L</span>:</h3>
+                            <ul id="encodingRules">
+                                <li><strong>Bit 1:</strong> Draw at +V level for the entire bit duration</li>
+                                <li><strong>Bit 0:</strong> Draw at -V level for the entire bit duration</li>
+                                <li><strong>Transitions:</strong> Occur only when the bit value changes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Built for Network Communications • Signal Encoding Visualization Tool</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
