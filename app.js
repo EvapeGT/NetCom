@@ -110,22 +110,21 @@ const encodingInfo = {
         ]
     },
     cmi: {
-        title: 'CMI (Coded Mark Inversion)',
+        title: 'CMI (Coded Mark Inversion) - Modified',
         shortTitle: 'CMI',
         rules: [
-            '<strong>Bit 0:</strong> Transition from 0V to +V at the middle of bit (always)',
-            '<strong>Bit 1:</strong> Alternates between staying at +V and staying at 0V',
-            '<strong>First 1:</strong> Full bit at 0V, next 1 is full bit at +V, etc.',
-            '<strong>0 always transitions:</strong> Every 0 has a mid-bit transition from 0V to +V'
+            '<strong>Bit 0:</strong> Signal stays at 0V (flat) for the entire bit',
+            '<strong>Bit 1:</strong> Signal goes to +V (Positive)',
+            '<strong>Note:</strong> Matching teacher\'s "0 flat, 1 positive" example',
+            '<strong>Logic:</strong> Unipolar behavior'
         ],
         steps: [
             'Draw 2 horizontal dotted lines: +V at top, 0 at bottom',
-            'Divide each bit cell into 2 halves for 0-bits',
+            'Mark vertical gridlines',
             'Write the binary bits above the graph',
-            'For first 1: draw flat line at 0V for entire bit',
-            'For next 1: draw flat line at +V for entire bit (alternate)',
-            'For each 0: draw 0V for first half, then +V for second half',
-            'Track which level the next "1" should use!'
+            'For each 0: Draw a flat line along the 0V axis',
+            'For each 1: Draw a line at the +V level',
+            'Connect the levels vertical lines'
         ]
     }
 };
@@ -343,10 +342,9 @@ function drawWaveform(binary, encoding) {
                 break;
 
             case 'cmi':
-                // CMI uses voltageHigh and voltageZero (passed as 'low' parameter)
-                const cmiResult = drawCMI(ctx, x, bitWidth, bit, voltageHigh, voltageZero, lastY, i, cmiPolarity);
-                lastY = cmiResult.lastY;
-                cmiPolarity = cmiResult.polarity;
+                // CMI Modified: 0 is flat 0V, 1 is +V
+                drawCMI(ctx, x, bitWidth, bit, voltageHigh, voltageZero, lastY, i);
+                lastY = bit === '1' ? voltageHigh : voltageZero;
                 break;
         }
     }
@@ -455,37 +453,17 @@ function drawAMI(ctx, x, width, bit, high, zero, low, lastY, index, polarity) {
     return { lastY: newY, polarity: newPolarity };
 }
 
-function drawCMI(ctx, x, width, bit, high, low, lastY, index, polarity) {
-    let newPolarity = polarity;
+function drawCMI(ctx, x, width, bit, high, zero, lastY, index) {
+    // Modified CMI: 0 = Flat 0V, 1 = +V
+    const y = bit === '1' ? high : zero;
 
-    if (bit === '1') {
-        // 1 = alternating full bit at +V or -V
-        const y = polarity === 1 ? high : low;
-        newPolarity = -polarity;
-
-        if (index === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, lastY);
-            if (lastY !== y) ctx.lineTo(x, y);
-        }
-        ctx.lineTo(x + width, y);
-
-        return { lastY: y, polarity: newPolarity };
-    } else {
-        // 0 = -V to +V transition at middle
-        if (index === 0) {
-            ctx.moveTo(x, low);
-        } else {
-            ctx.lineTo(x, lastY);
-            if (lastY !== low) ctx.lineTo(x, low);
-        }
-        ctx.lineTo(x + width / 2, low);
-        ctx.lineTo(x + width / 2, high);
-        ctx.lineTo(x + width, high);
-
-        return { lastY: high, polarity: polarity };
+    if (index === 0) {
+        ctx.moveTo(x, y);
+    } else if (lastY !== y) {
+        ctx.lineTo(x, lastY);
+        ctx.lineTo(x, y);
     }
+    ctx.lineTo(x + width, y);
 }
 
 // ===================================
