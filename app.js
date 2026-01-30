@@ -39,16 +39,16 @@ const encodingInfo = {
         shortTitle: 'NRZ-L',
         rules: [
             '<strong>Bit 1:</strong> Signal stays at +V (high) for the entire bit duration',
-            '<strong>Bit 0:</strong> Signal stays at 0V (low) for the entire bit duration',
+            '<strong>Bit 0:</strong> Signal stays at -V (low) for the entire bit duration',
             '<strong>Transitions:</strong> Only occur when the bit value changes (0→1 or 1→0)',
-            '<strong>No return to zero:</strong> Signal maintains level for full bit period'
+            '<strong>No return to zero:</strong> Signal never returns to 0V between bits'
         ],
         steps: [
-            'Draw 2 horizontal dotted lines: +V at top, 0 at bottom',
+            'Draw 3 horizontal dotted lines: +V at top, 0 in middle, -V at bottom',
             'Mark vertical gridlines - each bit occupies <strong>1 full cell width</strong>',
             'Write the binary bits above the graph (0 1 0 0 1 0 0 0...)',
             'For each 1: draw a horizontal line at +V level',
-            'For each 0: draw a horizontal line at 0V level',
+            'For each 0: draw a horizontal line at -V level',
             'Connect bits with vertical lines only when value changes'
         ]
     },
@@ -302,8 +302,8 @@ function drawWaveform(binary, encoding) {
 
         switch (encoding) {
             case 'nrz':
-                drawNRZ(ctx, x, bitWidth, bit, voltageHigh, voltageZero, lastY, i);
-                lastY = bit === '1' ? voltageHigh : voltageZero;
+                drawNRZ(ctx, x, bitWidth, bit, voltageHigh, voltageLow, lastY, i);
+                lastY = bit === '1' ? voltageHigh : voltageLow;
                 break;
 
             case 'rz':
