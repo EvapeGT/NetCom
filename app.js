@@ -20,6 +20,7 @@ const guideSteps = document.getElementById('guideSteps');
 const copyBinaryBtn = document.getElementById('copyBinaryBtn');
 const zoomInBtn = document.getElementById('zoomInBtn');
 const zoomOutBtn = document.getElementById('zoomOutBtn');
+const clearMarkerBtn = document.getElementById('clearMarkerBtn');
 const downloadBtn = document.getElementById('downloadBtn');
 
 // ===================================
@@ -27,6 +28,7 @@ const downloadBtn = document.getElementById('downloadBtn');
 // ===================================
 let currentBinary = '';
 let currentZoom = 1;
+let markerBitIndex = null; // State for the active bookmark/ruler
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
 
@@ -201,6 +203,24 @@ function drawWaveform(binary, encoding) {
     // Clear and draw graph paper background
     ctx.fillStyle = '#fefce8';
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // Draw Bookmark/Ruler Highlight (behind the grid)
+    if (markerBitIndex !== null && markerBitIndex >= 0 && markerBitIndex < binary.length) {
+        const markerX = padding + markerBitIndex * bitWidth;
+
+        ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'; // Yellow highlighter look
+        ctx.fillRect(markerX, topPadding - 10, bitWidth, voltageLow - topPadding + 40);
+
+        ctx.strokeStyle = '#f59e0b'; // Darker orange/yellow border
+        ctx.lineWidth = 2;
+        ctx.strokeRect(markerX, topPadding - 10, bitWidth, voltageLow - topPadding + 40);
+
+        // Add a "Bookmark" label
+        ctx.fillStyle = '#b45309';
+        ctx.font = `bold ${10 * currentZoom}px "JetBrains Mono", monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText("RULER", markerX + bitWidth / 2, topPadding - 25);
+    }
 
     // Draw minor grid lines
     ctx.strokeStyle = '#e5e5e5';
@@ -474,9 +494,10 @@ function drawCMI(ctx, x, width, bit, high, low, lastY, index, polarity) {
 
 function updateBinaryDisplay(name, binary) {
     // Display binary with colored bits
-    binaryDisplay.innerHTML = binary.split('').map(bit =>
-        `<span class="bit-${bit}">${bit}</span>`
-    ).join('');
+    binaryDisplay.innerHTML = binary.split('').map((bit, index) => {
+        const activeClass = (index === markerBitIndex) ? ' bit-active' : '';
+        return `<span class="bit-${bit}${activeClass}" id="bit-${index}">${bit}</span>`;
+    }).join('');
 
     // Character breakdown
     charBreakdown.innerHTML = '';
@@ -527,6 +548,7 @@ convertBtn.addEventListener('click', () => {
 
     const encoding = getSelectedEncoding();
     currentBinary = stringToBinary(name);
+    markerBitIndex = null; // Reset marker on new conversion
 
     // Update UI
     updateBinaryDisplay(name, currentBinary);
@@ -589,6 +611,55 @@ downloadBtn.addEventListener('click', () => {
     link.click();
 
     showToast('Image downloaded!');
+});
+
+// Canvas Click for Bookmark
+waveformCanvas.addEventListener('click', (e) => {
+    if (!currentBinary) return;
+
+    const rect = waveformCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+
+    // Calculate which bit was clicked
+    // Padding is 80, but we need to account for canvas scaling if CSS size differs from attr size
+    // Currently CSS says min-width 100%, so let's stick to logic coordinates
+    // We might need to map visual coordinate to canvas coordinate if they differ
+
+    // Simple approach: map mouse X to canvas X
+    // Canvas works in its internal resolution.
+    // If canvas is displayed at different size, we normally need (canvas.width / rect.width)
+    const scaleX = waveformCanvas.width / rect.width;
+    const canvasX = x * scaleX;
+
+    const padding = 80;
+    const bitWidth = 40 * currentZoom;
+
+    if (canvasX >= padding) {
+        const clickedIndex = Math.floor((canvasX - padding) / bitWidth);
+
+        if (clickedIndex >= 0 && clickedIndex < currentBinary.length) {
+            markerBitIndex = clickedIndex;
+
+            // Redraw everything
+            drawWaveform(currentBinary, getSelectedEncoding());
+            updateBinaryDisplay(nameInput.value, currentBinary);
+
+            // Scroll the text display to show the active bit
+            const activeBitEl = document.getElementById(`bit-${markerBitIndex}`);
+            if (activeBitEl) {
+                activeBitEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }
+    }
+});
+
+// Clear Marker Button
+clearMarkerBtn.addEventListener('click', () => {
+    markerBitIndex = null;
+    if (currentBinary) {
+        drawWaveform(currentBinary, getSelectedEncoding());
+        updateBinaryDisplay(nameInput.value, currentBinary);
+    }
 });
 
 // Enter key to convert
